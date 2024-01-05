@@ -23,8 +23,8 @@ export class ProductsController {
 
   @Get()
   findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
     @Query('category') category?: string,
     @Query('filter') filter?: string,
     @Query('search') search?: string,
@@ -37,7 +37,7 @@ export class ProductsController {
     @Query('minUpdatedAt') minUpdatedAt?: string,
     @Query('maxUpdatedAt') maxUpdatedAt?: string,
     @Query('sortField') sortField?: string,
-    @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc',
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
   ) {
     let parsedFilter = {};
     try {
