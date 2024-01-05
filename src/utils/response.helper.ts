@@ -20,7 +20,8 @@ export function sendResponse<T>(
       data,
       sort,
       pagination: {
-        page,
+        page: Number(page),
+        pages: Math.ceil(totalCount / limit),
         limit,
         totalCount,
       },
@@ -30,9 +31,8 @@ export function sendResponse<T>(
     return {
       status,
       message,
-      data,
-      sort,
       statusCode,
+      data,
     };
   }
 }

@@ -80,12 +80,19 @@ export class UserService {
         .find()
         .select('-password -salt -__v')
         .exec();
-
+      if (!users) {
+        return sendResponse(
+          users,
+          'User Not Found',
+          ReasonPhrases.NOT_FOUND,
+          StatusCodes.NOT_FOUND,
+        ) as any;
+      }
       return sendResponse(
         users,
-        'User Not Found',
-        ReasonPhrases.NOT_FOUND,
-        StatusCodes.NOT_FOUND,
+        'Users retrieved ',
+        ReasonPhrases.OK,
+        StatusCodes.OK,
       ) as any;
     } catch (error) {
       // Handle errors here, e.g., log the error or return a custom error response

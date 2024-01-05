@@ -11,9 +11,6 @@ export class ApiResponseDto<T> {
   @ApiProperty()
   data: T;
 
-  @ApiProperty()
-  sort: string;
-
   @ApiProperty({ example: 400 })
   statusCode: number;
 }
@@ -37,6 +34,7 @@ export class ApiResponseArrayDto<T> {
   @ApiProperty()
   pagination: {
     page: number;
+    pages: number;
     limit: number;
     totalCount: number;
   };
