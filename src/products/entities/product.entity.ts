@@ -12,9 +12,16 @@ export class Product {
   @Prop({ required: true, unique: true })
   name: string;
 
-  @IsString()
-  @Prop({ required: true })
-  category: string;
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: false,
+    validate: {
+      validator: (v: any) => mongoose.Types.ObjectId.isValid(v),
+      message: 'category must be a valid ObjectId',
+    },
+  })
+  category: mongoose.Schema.Types.ObjectId;
 
   @IsNumber()
   @Prop({ required: true })
@@ -42,3 +49,10 @@ export class Product {
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
+
+ProductSchema.pre('save', function (next) {
+  if (this.quantity === 0) {
+    this.availability = false;
+  }
+  next();
+});

@@ -1,6 +1,11 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import {
+  Category,
+  CategorySchema,
+} from 'src/category/entities/category.entity';
 import { Product, ProductSchema } from 'src/products/entities/product.entity';
+import { Purchase, PurchaseSchema } from 'src/purchase/entities/purchase.entity';
 import { User, UserSchema } from 'src/user/entities/user.entity';
 
 @Module({
@@ -16,6 +21,14 @@ import { User, UserSchema } from 'src/user/entities/user.entity';
       {
         name: Product.name,
         schema: ProductSchema,
+      },
+      {
+        name: Category.name,
+        schema: CategorySchema,
+      },
+      {
+        name: Purchase.name,
+        schema: PurchaseSchema,
       },
     ]),
   ],

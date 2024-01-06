@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { Product, ProductDocument } from './entities/product.entity';
 import { sendResponse } from 'src/utils/response.helper';
 
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import { ApiResponseDto } from 'src/global.dto/response.dto';
 
 export enum ProductField {
   NAME = 'name',
@@ -33,9 +34,38 @@ export class ProductsService {
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
   ) {}
 
-  async create(createProductDto: CreateProductDto): Promise<Product> {
-    const createdProduct = new this.productModel(createProductDto);
-    return createdProduct.save();
+  async create(createProductDto: CreateProductDto): Promise<any> {
+    try {
+      const existingProduct = await this.productModel
+        .findOne({ name: createProductDto.name })
+        .exec();
+
+      if (existingProduct) {
+        return sendResponse(
+          null,
+          'Product with the same name already exists',
+          ReasonPhrases.CONFLICT,
+          StatusCodes.CONFLICT,
+        );
+      }
+
+      const createdProduct = new this.productModel(createProductDto);
+      createdProduct.save();
+      return sendResponse(
+        createdProduct,
+        'Product Created Successfully',
+        ReasonPhrases.OK,
+        StatusCodes.OK,
+      );
+    } catch (error) {
+      console.log('error in create product', error);
+      return sendResponse(
+        null,
+        'Error Creating Product',
+        ReasonPhrases.INTERNAL_SERVER_ERROR,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async findAll(
@@ -51,7 +81,7 @@ export class ProductsService {
     maxCreatedAt: Date = null,
     minUpdatedAt: Date = null,
     maxUpdatedAt: Date = null,
-    sortField: string  = ProductField.CREATED_AT,
+    sortField: string = ProductField.CREATED_AT,
     sortOrder: 'asc' | 'desc' = 'asc',
   ) {
     try {
@@ -107,6 +137,7 @@ export class ProductsService {
 
       const products = await this.productModel
         .find(query)
+        .populate({ path: 'category', model: 'Category' })
         .skip(skip)
         .limit(limit)
         .sort({ [sortField]: sortOrder })
@@ -139,6 +170,8 @@ export class ProductsService {
         totalCount,
       );
     } catch (error) {
+      console.log('Error in findAll:', error);
+
       return sendResponse(
         [],
         'No product Found',
@@ -154,7 +187,10 @@ export class ProductsService {
 
   async findOne(id: string) {
     try {
-      const product = await this.productModel.findById(id).exec();
+      const product = await this.productModel
+        .findById(id)
+        .populate({ path: 'category', select: 'name' })
+        .exec();
 
       if (!product) {
         return sendResponse(
@@ -181,7 +217,7 @@ export class ProductsService {
     }
   }
 
-  async update(id: number, updateProductDto: UpdateProductDto) {
+  async update(id: string, updateProductDto: UpdateProductDto) {
     try {
       const product = await this.productModel.findById(id).exec();
 
@@ -200,7 +236,7 @@ export class ProductsService {
       }
 
       if (updateProductDto.category) {
-        product.category = updateProductDto.category;
+        product.category = updateProductDto.category as any;
       }
 
       if (updateProductDto.price) {
@@ -234,7 +270,7 @@ export class ProductsService {
     }
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     try {
       const product = await this.productModel.findById(id).exec();
 
@@ -271,4 +307,50 @@ export class ProductsService {
       );
     }
   }
+
+
+  async updateQuantity(productId: string, quantityDelta: number): Promise<any> {
+    try {
+   
+      const product = await this.productModel.findById(productId).exec();
+
+      if (!product) {
+        return sendResponse(
+          null,
+          'Product not found',
+          ReasonPhrases.NOT_FOUND,
+          StatusCodes.NOT_FOUND,
+        );
+      }
+
+      // Update the quantity
+      product.quantity += quantityDelta;
+
+      // Set availability based on quantity
+      product.availability = product.quantity > 0;
+
+      // Save the updated product
+      await product.save();
+
+      return sendResponse(
+        product,
+        'Product quantity updated successfully',
+        ReasonPhrases.OK,
+        StatusCodes.OK,
+      );
+    } catch (error) {
+      console.log('error updating product quantity', error);
+      return sendResponse(
+        null,
+        'Error updating product quantity',
+        ReasonPhrases.INTERNAL_SERVER_ERROR,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
+
+
+
+
+
