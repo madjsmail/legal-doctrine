@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, userDocument } from './entities/user.entity';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { sendResponse } from 'src/utils/response.helper';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import * as bcrypt from 'bcryptjs';
@@ -50,8 +50,7 @@ export class UserService {
 
     user.salt = await bcrypt.genSalt();
     user.password = await bcrypt.hash(password, user.salt);
-    // user.emailValidationCode = AuthHelpers.getRandomEmailValidationCode();
-    // user.phoneValidationCode = AuthHelpers.getRandomPhoneValidationCode();
+
 
     try {
       const createdUser = new this.userModel(user);
@@ -64,7 +63,6 @@ export class UserService {
         StatusCodes.OK,
       );
     } catch (e) {
-      throw new InternalServerErrorException(e.message);
       return sendResponse(
         null,
         'Error creating User ',
@@ -74,19 +72,36 @@ export class UserService {
     }
   }
 
-  async findAll(): Promise<User[]> {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    sortField: keyof User = 'createdAt',
+    sortOrder: 'asc' | 'desc' = 'desc',
+    filter: Record<string, any> = {},
+  ): Promise<User[]> {
     try {
+      const skip = (page - 1) * limit;
+      const query: FilterQuery<userDocument> = {
+        ...filter,
+      };
+
       const users = await this.userModel
-        .find()
+        .find(query)
+        .sort({ [sortField]: sortOrder })
+        .skip(skip)
+        .limit(limit)
         .select('-password -salt -__v')
         .exec();
+
+        const totalCount = await this.userModel.countDocuments(query).exec();
+
       if (!users) {
         return sendResponse(
-          users,
-          'User Not Found',
+          null,
+          'Users Not Found',
           ReasonPhrases.NOT_FOUND,
           StatusCodes.NOT_FOUND,
-        ) as any;
+        );
       }
       return sendResponse(
         users,
@@ -98,15 +113,14 @@ export class UserService {
       // Handle errors here, e.g., log the error or return a custom error response
       return sendResponse(
         null,
-        'User Not Found',
+        'Error finding users',
         ReasonPhrases.INTERNAL_SERVER_ERROR,
         StatusCodes.INTERNAL_SERVER_ERROR,
       ) as any;
-      throw new Error('Error finding users');
     }
   }
 
-  async findOne(userId: string): Promise<User> {
+  async findOne(userId: string) {
     try {
       const user = await this.userModel
         .findById(userId)
@@ -133,7 +147,7 @@ export class UserService {
       throw new Error('Error finding user');
     }
   }
-  async findOneByEmail(email: string): Promise<User> {
+  async findOneByEmail(email: string){
     try {
       const user = await this.userModel
         .findOne({ email })
@@ -154,10 +168,16 @@ export class UserService {
         'User retrieved',
         ReasonPhrases.OK,
         StatusCodes.OK,
-      ) as any;
+      );
     } catch (error) {
-      // Handle errors here, e.g., log the error or return a custom error response
-      throw new Error('Error finding user by email');
+      return sendResponse(
+        null,
+        'Error finding user by email',
+        ReasonPhrases.OK,
+        StatusCodes.OK,
+      );
+      
+
     }
   }
 
