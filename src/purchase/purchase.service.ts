@@ -237,4 +237,111 @@ export class PurchaseService {
       );
     }
   }
+
+  async purchaseStats() {
+
+    const aggregationPipelineTotalPurchasesPerProduct = [
+      {
+        $group: {
+          _id: '$product',
+          totalPurchases: { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: 'products', // Change 'products' to your actual product collection name
+          localField: '_id',
+          foreignField: '_id',
+          as: 'productDetails',
+        },
+      },
+      {
+        $unwind: { path: '$productDetails', preserveNullAndEmptyArrays: true },
+      },
+      {
+        $project: {
+          _id: 1,
+          totalPurchases: 1,
+          productName: '$productDetails.name',
+        },
+      },
+    ];
+    const aggregationPipeline = [
+      {
+        $group: {
+          _id: '$product',
+          totalSales: { $sum: '$quantity' },
+        },
+      },
+      {
+        $sort: {
+          totalSales: -1,
+        },
+      },
+      {
+        $limit: 5,
+      },
+      {
+        $lookup: {
+          from: 'products', // Change 'products' to your actual product collection name
+          localField: '_id',
+          foreignField: '_id',
+          as: 'productDetails',
+        },
+      },
+      {
+        $unwind: '$productDetails',
+      },
+      {
+        $project: {
+          _id: 0,
+          productId: '$_id',
+          productName: '$productDetails.name',
+          totalSales: 1,
+        },
+      },
+    ];
+    return await this.getTopSellingProducts();
+  }
+
+
+  async getTopSellingProducts(limit: number = 10): Promise<any[]> {
+    const aggregationPipeline = [
+      {
+        $group: {
+          _id: '$product',
+          totalSales: { $sum: '$quantity' },
+        },
+      },
+      {
+        $sort: {
+          totalSales: -1,
+        },
+      },
+      {
+        $limit: limit,
+      },
+      {
+        $lookup: {
+          from: 'products', // Change 'products' to your actual product collection name
+          localField: '_id',
+          foreignField: '_id',
+          as: 'productDetails',
+        },
+      },
+      {
+        $unwind: '$productDetails',
+      },
+      {
+        $project: {
+          _id: 0,
+          productId: '$_id',
+          productName: '$productDetails.name',
+          totalSales: 1,
+        },
+      },
+    ];
+
+    return this.purchaseModel.aggregate(aggregationPipeline as any);
+  }
 }
