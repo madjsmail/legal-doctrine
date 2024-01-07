@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   Category,
@@ -9,9 +10,15 @@ import { Purchase, PurchaseSchema } from 'src/purchase/entities/purchase.entity'
 import { User, UserSchema } from 'src/user/entities/user.entity';
 
 @Module({
+  
   imports: [
-    MongooseModule.forRoot('mongodb://127.0.0.1:27017', {
-      dbName: 'legal-doctrine',
+    ConfigModule.forRoot(),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get('MONGODB_URI'),
+      }),
     }),
     MongooseModule.forFeature([
       {

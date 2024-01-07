@@ -12,6 +12,7 @@ import { PurchaseService } from './purchase.service';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { UpdatePurchaseDto } from './dto/update-purchase.dto';
 import { Purchase } from './entities/purchase.entity';
+import { query } from 'express';
 
 @Controller('purchase')
 export class PurchaseController {
@@ -81,5 +82,9 @@ export class PurchaseController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.purchaseService.remove(id);
+  }
+  @Get('/product/stats')
+  getStats(@Query('start') start: Date, @Query('end') end: Date, @Query('interval')  interval : 'month') {
+    return this.purchaseService.getStats(start,end,interval);
   }
 }

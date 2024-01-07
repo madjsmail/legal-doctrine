@@ -23,11 +23,11 @@ export class CategoryController {
 
   @Get()
   findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-    @Query('filter') filter: Record<string, any> = {},
-    @Query('sortField') sortField: string = 'createdAt',
-    @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc',
+    @Query('page') page?: number ,
+    @Query('limit') limit?: number ,
+    @Query('filter') filter?: Record<string, any> ,
+    @Query('sortField') sortField?: string ,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc' 
   ) {
     return this.categoryService.findAll(
       page,

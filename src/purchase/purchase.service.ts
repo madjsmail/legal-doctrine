@@ -238,110 +238,135 @@ export class PurchaseService {
     }
   }
 
-  async purchaseStats() {
 
-    const aggregationPipelineTotalPurchasesPerProduct = [
-      {
-        $group: {
-          _id: '$product',
-          totalPurchases: { $sum: 1 },
-        },
-      },
-      {
-        $lookup: {
-          from: 'products', // Change 'products' to your actual product collection name
-          localField: '_id',
-          foreignField: '_id',
-          as: 'productDetails',
-        },
-      },
-      {
-        $unwind: { path: '$productDetails', preserveNullAndEmptyArrays: true },
-      },
-      {
-        $project: {
-          _id: 1,
-          totalPurchases: 1,
-          productName: '$productDetails.name',
-        },
-      },
-    ];
-    const aggregationPipeline = [
-      {
-        $group: {
-          _id: '$product',
-          totalSales: { $sum: '$quantity' },
-        },
-      },
-      {
-        $sort: {
-          totalSales: -1,
-        },
-      },
-      {
-        $limit: 5,
-      },
-      {
-        $lookup: {
-          from: 'products', // Change 'products' to your actual product collection name
-          localField: '_id',
-          foreignField: '_id',
-          as: 'productDetails',
-        },
-      },
-      {
-        $unwind: '$productDetails',
-      },
-      {
-        $project: {
-          _id: 0,
-          productId: '$_id',
-          productName: '$productDetails.name',
-          totalSales: 1,
-        },
-      },
-    ];
-    return await this.getTopSellingProducts();
+
+
+
+
+  async getStats(start:Date = new Date('2020-01-01'), end:Date = new Date() , interval : string){
+
+    const data = {
+     trand: this.getPurchaseTrends(start , end, interval),
+     top_selling: this.getTopSellingProducts(start , end),
+     totla_purchases: this.getTotalPurchasesPerProduct(start , end)
+
+    }
+
+    return data
+
   }
+async getPurchaseTrends(start: Date, end: Date, interval = 'month') {
+
+  return this.purchaseModel.aggregate([
+    {
+      $match: {
+        purchaseDate: {
+          $gte: start, 
+          $lte: end
+        }
+      }
+    },
+    {
+      $group: {
+        _id: { 
+          year: { $year: "$purchaseDate" },
+          month: { $month: "$purchaseDate" }, 
+        },
+        totalSales: { $sum: "$totalPrice" },
+        totalItems: { $sum: "$quantity"},  
+      }
+    },
+    {
+      $lookup: {
+        from: "products",
+        localField: "product",
+        foreignField: "_id",
+        as: "product"
+      }
+    },
+    {
+      $unwind: "$product"
+    } ,
+    {
+      $sort: {
+        "_id.year": 1,
+        "_id.month": 1  
+      }
+    }
+  ]);
+
+}
+async getTopSellingProducts(start: Date, end: Date, limit = 5) {
+
+  return this.purchaseModel.aggregate([
+    {
+      $match: {
+        purchaseDate: {
+          $gte: start,  
+          $lte: end
+        }
+      }
+    },
+    {
+      $group: {
+        _id: "$product", 
+        totalSales: { $sum: "$totalPrice" }  
+      }
+    },
+    {
+      $lookup: {
+        from: "products",
+        localField: "product",
+        foreignField: "_id",
+        as: "product"
+      }
+    },
+    {
+      $unwind: "$product"
+    } ,
+    { 
+      $sort: { totalSales: -1 }  
+    },
+    {
+      $limit: limit
+    }
+  ]);
+
+}
+
+async getTotalPurchasesPerProduct(start: Date, end: Date) {
+
+  return this.purchaseModel.aggregate([
+    {
+      $match: {
+        purchaseDate: {
+          $gte: start,  
+          $lte: end
+        }  
+      }
+    },
+    {
+      $group: {
+        _id: "$product",
+        totalQuantity: { $sum: "$quantity" },
+        totalPrice: { $sum: "$totalPrice" }  
+      }
+    },
+    {
+      $lookup: {
+        from: "products",
+        localField: "product",
+        foreignField: "_id",
+        as: "product"
+      }
+    },
+    {
+      $unwind: "$product"
+    } 
+  ]);
+
+}
 
 
-  async getTopSellingProducts(limit: number = 10): Promise<any[]> {
-    const aggregationPipeline = [
-      {
-        $group: {
-          _id: '$product',
-          totalSales: { $sum: '$quantity' },
-        },
-      },
-      {
-        $sort: {
-          totalSales: -1,
-        },
-      },
-      {
-        $limit: limit,
-      },
-      {
-        $lookup: {
-          from: 'products', // Change 'products' to your actual product collection name
-          localField: '_id',
-          foreignField: '_id',
-          as: 'productDetails',
-        },
-      },
-      {
-        $unwind: '$productDetails',
-      },
-      {
-        $project: {
-          _id: 0,
-          productId: '$_id',
-          productName: '$productDetails.name',
-          totalSales: 1,
-        },
-      },
-    ];
 
-    return this.purchaseModel.aggregate(aggregationPipeline as any);
-  }
 }

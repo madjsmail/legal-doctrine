@@ -78,7 +78,7 @@ export class UserService {
     sortField: keyof User = 'createdAt',
     sortOrder: 'asc' | 'desc' = 'desc',
     filter: Record<string, any> = {},
-  ): Promise<User[]> {
+  ) {
     try {
       const skip = (page - 1) * limit;
       const query: FilterQuery<userDocument> = {
