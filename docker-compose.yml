@@ -1,26 +1,23 @@
+version: '3'
 services:
-  # Next.js app service
-  nextjs:
-    build:
-      context: .
-      dockerfile: Dockerfile.nextjs
-    ports:
-      - "3000:3000"
-    depends_on:
-      - mongodb
-    environment:
-      MONGODB_URI: "mongodb://mongodb:27017/legal-doctrine"
 
-  # MongoDB service
-  mongodb:
+  mongo:
+    image: mongo
+    volumes:
+      - data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+
+  api:
     build:
       context: .
-      dockerfile: Dockerfile.mongodb
     ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
+      - 3000:3000
+    environment:
+      - MONGODB_URI=mongodb://root:example@mongo:27017
+    depends_on:
+      - mongo
 
 volumes:
-  mongodb_data:
-    driver: local
+  data:

@@ -244,15 +244,33 @@ export class PurchaseService {
 
 
   async getStats(start:Date = new Date('2020-01-01'), end:Date = new Date() , interval : string){
-
-    const data = {
-     trand: this.getPurchaseTrends(start , end, interval),
-     top_selling: this.getTopSellingProducts(start , end),
-     totla_purchases: this.getTotalPurchasesPerProduct(start , end)
-
+    try {
+      const data = {
+        trand: this.getPurchaseTrends(start , end, interval),
+        top_selling: this.getTopSellingProducts(start , end),
+        totla_purchases: this.getTotalPurchasesPerProduct(start , end)
+   
+       }
+      return sendResponse(
+        {...data},
+        'Starts retrived',
+        ReasonPhrases.OK,
+        StatusCodes.OK,
+      );
+    } catch (error) {
+      console.log('Error retriving stats'+error);
+      
+      return sendResponse(
+        null , 
+        'Error retriving stats',
+        ReasonPhrases.INTERNAL_SERVER_ERROR,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+      );
     }
 
-    return data
+
+
+    
 
   }
 async getPurchaseTrends(start: Date, end: Date, interval = 'month') {
