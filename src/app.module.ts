@@ -12,7 +12,6 @@ import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
     UserModule, AuthModule, ProductsModule, CategoryModule, PurchaseModule,    HttpModule.register({
     timeout: 5000,
     maxRedirects: 5,

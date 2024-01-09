@@ -246,9 +246,9 @@ export class PurchaseService {
   async getStats(start:Date = new Date('2020-01-01'), end:Date = new Date() , interval : string){
     try {
       const data = {
-        trand: this.getPurchaseTrends(start , end, interval),
-        top_selling: this.getTopSellingProducts(start , end),
-        totla_purchases: this.getTotalPurchasesPerProduct(start , end)
+        trand: await this.getPurchaseTrends(start , end, interval),
+        top_selling:await this.getTopSellingProducts(start , end),
+        totla_purchases: await this.getTotalPurchasesPerProduct(start , end)
    
        }
       return sendResponse(

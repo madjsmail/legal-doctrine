@@ -15,6 +15,8 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { AUTH_GUARD_CONFIG, AuthGuardConfig } from 'src/guards/auth-guard';
 
 @Controller('products')
+@SetMetadata(AUTH_GUARD_CONFIG, {disabled: true}) 
+
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
   @Post()

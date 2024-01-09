@@ -57,6 +57,11 @@ GET /cards
   }
 ]
 ```
+# for testing 
+to make the routes public you can add this code after the @controller('..') 
+```
+@SetMetadata(AUTH_GUARD_CONFIG, {disabled: true}) 
+```
 
 # Modules
 

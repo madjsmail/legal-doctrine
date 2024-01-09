@@ -7,14 +7,18 @@ import {
   Param,
   Delete,
   Query,
+  SetMetadata,
 } from '@nestjs/common';
 import { PurchaseService } from './purchase.service';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { UpdatePurchaseDto } from './dto/update-purchase.dto';
 import { Purchase } from './entities/purchase.entity';
 import { query } from 'express';
+import { AUTH_GUARD_CONFIG } from 'src/guards/auth-guard';
 
 @Controller('purchase')
+@SetMetadata(AUTH_GUARD_CONFIG, {disabled: true}) 
+
 export class PurchaseController {
   constructor(private readonly purchaseService: PurchaseService) {}
 

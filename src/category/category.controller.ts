@@ -7,12 +7,16 @@ import {
   Param,
   Delete,
   Query,
+  SetMetadata,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { AUTH_GUARD_CONFIG } from 'src/guards/auth-guard';
 
 @Controller('category')
+@SetMetadata(AUTH_GUARD_CONFIG, {disabled: true}) 
+
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
